@@ -145,7 +145,13 @@ trait BaseByteArrayJournalDao extends JournalDaoWithUpdates {
       toSequenceNr: Long,
       max: Long): Source[Try[PersistentRepr], NotUsed] =
     Source
-      .fromPublisher(db.stream(queries.messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max).result))
+      .fromPublisher(
+        db.stream(
+          queries
+            .messagesQuery(persistenceId, fromSequenceNr, toSequenceNr, max)
+            .result
+            .transactionally
+            .withStatementParameters(fetchSize = journalConfig.daoConfig.fetchSize)))
       .via(serializer.deserializeFlowWithoutTags)
 }
 
